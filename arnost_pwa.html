@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="description" content="Evidence práce - Arnošt">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#2563eb">
+    <meta name="apple-mobile-web-app-title" content="Evidence - Arnošt">
+    
+    <title>Evidence práce - Arnošt</title>
+    
+    <link rel="manifest" href="manifest_arnost.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-light: #64748b;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 100px;
+            overscroll-behavior: contain;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+        }
+        
+        .worker-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        .install-banner {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .install-banner-content {
+            flex: 1;
+        }
+        
+        .install-banner-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .install-banner-text {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        
+        .install-btn {
+            background: white;
+            color: #059669;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+        
+        .time-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .order-section {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 2px dashed var(--border);
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .order-number {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.95rem;
+        }
+        
+        .remove-order {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .add-order-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg);
+            border: 2px dashed var(--primary);
+            color: var(--primary);
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            width: 100%;
+            padding: 14px;
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .entry {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .entry-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .entry-times {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+        
+        .entry-orders {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .entry-order-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .entry-order-header {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .entry-order-detail {
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .summary-item {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .summary-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .summary-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .info-box {
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: var(--primary-dark);
+            font-size: 0.85rem;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 0.9rem;
+        }
+        
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #059669;
+        }
+        
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+        
+        .setup-box {
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid rgba(255, 193, 7, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .setup-box h3 {
+            color: #f59e0b;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .setup-box p {
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+        
+        .setup-input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .setup-input-group input {
+            flex: 1;
+        }
+        
+        .setup-input-group button {
+            padding: 10px 16px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            font-size: 0.85rem;
+        }
+        
+        .offline-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #64748b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 1000;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+                padding-bottom: 80px;
+            }
+            
+            .time-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="worker-name">👷 Arnošt</div>
+            <h1>Evidence práce</h1>
+            <div class="subtitle">📱 PWA aplikace pro Android</div>
+        </header>
+        
+        <!-- Install banner -->
+        <div class="install-banner" id="installBanner">
+            <div class="install-banner-content">
+                <div class="install-banner-title">📲 Nainstalovat aplikaci</div>
+                <div class="install-banner-text">Přidejte si aplikaci na plochu pro rychlejší přístup</div>
+            </div>
+            <button class="install-btn" id="installBtn">Instalovat</button>
+        </div>
+        
+        <div class="alert alert-success" id="successAlert"></div>
+        <div class="alert alert-error" id="errorAlert"></div>
+        
+        <!-- Setup box -->
+        <div class="setup-box" id="setupBox">
+            <h3>⚙️ Nastavení Google Sheets</h3>
+            <p>Před prvním použitím vyplňte ID Google Sheets:</p>
+            <div class="setup-input-group">
+                <input type="text" id="setupSheetId" placeholder="ID Google Sheets">
+                <button onclick="saveSheetId()">Uložit</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">➕ Nový záznam</div>
+            
+            <form id="entryForm">
+                <div class="info-box">
+                    📅 <strong id="currentDate"></strong>
+                </div>
+                
+                <div class="time-row">
+                    <div class="form-group">
+                        <label>⏰ Příchod</label>
+                        <input type="time" id="arrival" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🏁 Odchod</label>
+                        <input type="time" id="departure" required>
+                    </div>
+                </div>
+                
+                <div id="ordersContainer">
+                    <div class="order-section">
+                        <div class="order-header">
+                            <span class="order-number">Zakázka 1</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>📋 Název zakázky</label>
+                            <input type="text" class="order-name" placeholder="Rekonstrukce koupelny" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>🔢 Číslo zakázky</label>
+                            <input type="text" class="order-number-input" placeholder="2024-001" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>🔧 Druh práce</label>
+                            <input type="text" class="order-work-type" placeholder="Obkladačské práce" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>⏱️ Hodiny</label>
+                            <input type="number" class="order-hours" step="0.5" min="0" max="24" placeholder="8.0" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" class="add-order-btn" id="addOrderBtn">+ Přidat zakázku</button>
+                
+                <button type="submit" class="btn-primary" id="submitBtn">💾 Uložit do Google Sheets</button>
+            </form>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">📊 Přehled měsíce</div>
+            
+            <div class="summary">
+                <div class="summary-item">
+                    <div class="summary-label">Celkem hodin</div>
+                    <div class="summary-value" id="totalHours">0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Pracovních dnů</div>
+                    <div class="summary-value" id="totalDays">0</div>
+                </div>
+            </div>
+            
+            <button class="btn-secondary" onclick="openGoogleSheets()">📊 Otevřít Google Sheets</button>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">📝 Poslední záznamy</div>
+            <div id="entriesList"></div>
+        </div>
+    </div>
+    
+    <div class="offline-indicator" id="offlineIndicator">
+        📶 Offline režim
+    </div>
+
+    <script>
+        const WORKER_NAME = 'Arnošt';
+        const STORAGE_KEY = 'workEntries_arnost';
+        const SHEET_ID_KEY = 'googleSheetId_arnost';
+        
+        let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        let orderCount = 1;
+        const MAX_ORDERS = 3;
+        let GOOGLE_SHEET_ID = localStorage.getItem(SHEET_ID_KEY) || '';
+        let deferredPrompt;
+        
+        // PWA Install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBanner').style.display = 'flex';
+        });
+        
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('installBanner').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+        
+        // Service Worker registrace
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed'));
+        }
+        
+        // Online/Offline detection
+        window.addEventListener('online', () => {
+            document.getElementById('offlineIndicator').style.display = 'none';
+        });
+        
+        window.addEventListener('offline', () => {
+            document.getElementById('offlineIndicator').style.display = 'block';
+        });
+        
+        // Kontrola nastavení
+        window.onload = function() {
+            if (GOOGLE_SHEET_ID) {
+                document.getElementById('setupBox').style.display = 'none';
+            }
+            updateCurrentDate();
+            displayEntries();
+            updateSummary();
+        };
+        
+        function saveSheetId() {
+            const sheetId = document.getElementById('setupSheetId').value.trim();
+            if (!sheetId) {
+                showAlert('Prosím vyplňte ID!', 'error');
+                return;
+            }
+            GOOGLE_SHEET_ID = sheetId;
+            localStorage.setItem(SHEET_ID_KEY, sheetId);
+            document.getElementById('setupBox').style.display = 'none';
+            showAlert('Nastavení uloženo!', 'success');
+        }
+        
+        function openGoogleSheets() {
+            if (!GOOGLE_SHEET_ID) {
+                showAlert('Nejprve nastavte ID!', 'error');
+                return;
+            }
+            window.open(`https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/edit`, '_blank');
+        }
+        
+        function showAlert(message, type = 'success') {
+            const alertEl = document.getElementById(type === 'success' ? 'successAlert' : 'errorAlert');
+            alertEl.textContent = message;
+            alertEl.style.display = 'block';
+            setTimeout(() => { alertEl.style.display = 'none'; }, 4000);
+        }
+        
+        function updateCurrentDate() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('cs-CZ', { 
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+            });
+        }
+        
+        async function sendToGoogleSheets(entry) {
+            if (!GOOGLE_SHEET_ID) {
+                showAlert('Nejprve nastavte ID!', 'error');
+                return false;
+            }
+            
+            const dayNames = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
+            const date = new Date(entry.date);
+            const dayName = dayNames[date.getDay()];
+            
+            for (const order of entry.orders) {
+                const row = [
+                    entry.worker,
+                    entry.date,
+                    dayName,
+                    entry.arrival,
+                    entry.departure,
+                    order.name,
+                    order.number,
+                    order.workType,
+                    order.hours
+                ];
+                
+                try {
+                    await fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec`, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            sheetId: GOOGLE_SHEET_ID,
+                            data: row
+                        })
+                    });
+                } catch (error) {
+                    console.error('Chyba:', error);
+                    showAlert('Chyba ukládání. Data uložena lokálně.', 'error');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        document.getElementById('addOrderBtn').addEventListener('click', () => {
+            if (orderCount >= MAX_ORDERS) {
+                showAlert('Max 3 zakázky!', 'error');
+                return;
+            }
+            
+            orderCount++;
+            const container = document.getElementById('ordersContainer');
+            const orderSection = document.createElement('div');
+            orderSection.className = 'order-section';
+            orderSection.innerHTML = `
+                <div class="order-header">
+                    <span class="order-number">Zakázka ${orderCount}</span>
+                    <button type="button" class="remove-order" onclick="removeOrder(this)">Odebrat</button>
+                </div>
+                <div class="form-group">
+                    <label>📋 Název zakázky</label>
+                    <input type="text" class="order-name" required>
+                </div>
+                <div class="form-group">
+                    <label>🔢 Číslo zakázky</label>
+                    <input type="text" class="order-number-input" required>
+                </div>
+                <div class="form-group">
+                    <label>🔧 Druh práce</label>
+                    <input type="text" class="order-work-type" required>
+                </div>
+                <div class="form-group">
+                    <label>⏱️ Hodiny</label>
+                    <input type="number" class="order-hours" step="0.5" min="0" max="24" required>
+                </div>
+            `;
+            container.appendChild(orderSection);
+        });
+        
+        window.removeOrder = function(btn) {
+            btn.closest('.order-section').remove();
+            orderCount--;
+            document.querySelectorAll('.order-number').forEach((el, i) => {
+                el.textContent = `Zakázka ${i + 1}`;
+            });
+        };
+        
+        document.getElementById('entryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!GOOGLE_SHEET_ID) {
+                showAlert('Nejprve nastavte ID!', 'error');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Ukládám...';
+            
+            try {
+                const orders = [];
+                document.querySelectorAll('.order-section').forEach(section => {
+                    orders.push({
+                        name: section.querySelector('.order-name').value,
+                        number: section.querySelector('.order-number-input').value,
+                        workType: section.querySelector('.order-work-type').value,
+                        hours: parseFloat(section.querySelector('.order-hours').value)
+                    });
+                });
+                
+                const entry = {
+                    id: Date.now().toString(),
+                    worker: WORKER_NAME,
+                    date: new Date().toISOString().split('T')[0],
+                    arrival: document.getElementById('arrival').value,
+                    departure: document.getElementById('departure').value,
+                    orders: orders,
+                    totalHours: orders.reduce((sum, order) => sum + order.hours, 0)
+                };
+                
+                await sendToGoogleSheets(entry);
+                
+                entries.unshift(entry);
+                if (entries.length > 10) entries = entries.slice(0, 10);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+                
+                showAlert('Uloženo! ✅', 'success');
+                
+                document.getElementById('entryForm').reset();
+                document.getElementById('ordersContainer').innerHTML = `
+                    <div class="order-section">
+                        <div class="order-header"><span class="order-number">Zakázka 1</span></div>
+                        <div class="form-group"><label>📋 Název zakázky</label><input type="text" class="order-name" required></div>
+                        <div class="form-group"><label>🔢 Číslo zakázky</label><input type="text" class="order-number-input" required></div>
+                        <div class="form-group"><label>🔧 Druh práce</label><input type="text" class="order-work-type" required></div>
+                        <div class="form-group"><label>⏱️ Hodiny</label><input type="number" class="order-hours" step="0.5" min="0" max="24" required></div>
+                    </div>
+                `;
+                orderCount = 1;
+                
+                displayEntries();
+                updateSummary();
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '💾 Uložit do Google Sheets';
+            }
+        });
+        
+        function displayEntries() {
+            const entriesList = document.getElementById('entriesList');
+            
+            if (entries.length === 0) {
+                entriesList.innerHTML = '<div class="empty-state">Zatím žádné záznamy</div>';
+                return;
+            }
+            
+            entriesList.innerHTML = entries.map(entry => `
+                <div class="entry">
+                    <div class="entry-date">${new Date(entry.date).toLocaleDateString('cs-CZ')}</div>
+                    <div class="entry-times">
+                        <div><strong>Příchod:</strong> ${entry.arrival}</div>
+                        <div><strong>Odchod:</strong> ${entry.departure}</div>
+                        <div><strong>Celkem:</strong> ${entry.totalHours}h</div>
+                    </div>
+                    <div class="entry-orders">
+                        ${entry.orders.map(order => `
+                            <div class="entry-order-item">
+                                <div class="entry-order-header">${order.name} (${order.number}) - ${order.hours}h</div>
+                                <div class="entry-order-detail">${order.workType}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateSummary() {
+            const now = new Date();
+            const monthEntries = entries.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            });
+            
+            document.getElementById('totalHours').textContent = monthEntries.reduce((s, e) => s + e.totalHours, 0).toFixed(1);
+            document.getElementById('totalDays').textContent = monthEntries.length;
+        }
+    </script>
+</body>
+</html>
