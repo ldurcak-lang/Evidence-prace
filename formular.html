@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMG – Cenová kalkulace</title>
+<script src="data.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f5f4f0;
+  color: #1a1a1a;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ── SIDEBAR ─────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: #1a1a14;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+}
+.sidebar-logo { padding: 28px 24px 22px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.sidebar-logo .hmg { font-size: 26px; font-weight: 800; color: #c9a84c; letter-spacing: 2px; font-family: Georgia, serif; }
+.sidebar-logo .sub { font-size: 9px; color: #5a5a48; letter-spacing: 3px; text-transform: uppercase; margin-top: 3px; }
+.nav-section-label { font-size: 9px; color: #4a4a38; letter-spacing: 2.5px; text-transform: uppercase; padding: 0 24px; margin: 18px 0 6px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 24px; color: #7a7a62; font-size: 13px; cursor: pointer; border-left: 2px solid transparent; transition: all 0.15s; }
+.nav-item:hover { color: #c9a84c; background: rgba(201,168,76,0.05); }
+.nav-item.active { color: #c9a84c; background: rgba(201,168,76,0.08); border-left-color: #c9a84c; font-weight: 600; }
+
+/* ── CONTENT ─────────────────────────────────── */
+.content { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { background: white; border-bottom: 1px solid #e8e6e0; padding: 0 28px; height: 58px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 50; }
+.topbar h1 { font-size: 16px; font-weight: 700; }
+.topbar .spacer { flex: 1; }
+
+.btn { padding: 7px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+.btn-ghost { background: transparent; color: #666; border: 1.5px solid #ddd; }
+.btn-ghost:hover { border-color: #c9a84c; color: #c9a84c; }
+.btn-gold { background: #c9a84c; color: #1a1a14; }
+.btn-gold:hover { background: #b8973e; }
+.btn-sm { padding: 5px 10px; font-size: 11.5px; }
+
+.tabs { display: flex; background: white; border-bottom: 1px solid #e8e6e0; padding: 0 28px; }
+.tab { padding: 12px 18px; font-size: 13px; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+.tab.active { color: #1a1a14; border-bottom-color: #c9a84c; font-weight: 600; }
+
+main { padding: 24px 28px; flex: 1; }
+
+/* ── SUMMARY STRIP ───────────────────────────── */
+.summary-strip { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
+.stat-pill { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #666; }
+.stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: #5aab6e; } .dot-gold { background: #c9a84c; } .dot-red { background: #d44; }
+.summary-strip .spacer { flex: 1; }
+.strip-total { font-size: 15px; font-weight: 800; color: #c9a84c; }
+.strip-label { font-size: 11px; color: #aaa; }
+
+/* ── CARD ────────────────────────────────────── */
+.card { background: white; border-radius: 12px; border: 1px solid #e8e6e0; overflow: hidden; }
+.card-header { padding: 14px 22px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f0ede6; }
+.card-header h2 { font-size: 14px; font-weight: 700; }
+.badge { background: #f5f4f0; color: #888; border-radius: 20px; font-size: 10.5px; padding: 2px 8px; font-weight: 600; }
+
+/* ── TABLE ───────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: #1a1a14; }
+thead th { padding: 10px 11px; text-align: left; font-size: 10px; font-weight: 700; color: #c9a84c; text-transform: uppercase; letter-spacing: 0.7px; white-space: nowrap; }
+thead th:first-child { padding-left: 20px; }
+thead th:last-child { padding-right: 16px; }
+
+tbody tr { border-bottom: 1px solid #f5f3ee; transition: background 0.1s; }
+tbody tr:hover { background: #fdfcf9; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr.manual-row { background: #fdfcf5; }
+tbody tr.empty-row { background: #fffdf9; }
+
+td { padding: 8px 11px; vertical-align: middle; font-size: 12.5px; }
+td:first-child { padding-left: 20px; }
+td:last-child { padding-right: 10px; }
+
+.row-num { width: 20px; height: 20px; border-radius: 5px; background: #f0ede6; color: #999; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; }
+.row-num.manual-n { background: #f5f0e0; color: #b08a30; }
+
+/* ── INPUTS ──────────────────────────────────── */
+select, input[type="number"], input[type="text"], textarea {
+  width: 100%; border: 1.5px solid #e4e0d8; border-radius: 6px;
+  padding: 5px 8px; font-size: 12px; color: #1a1a14;
+  background: white; outline: none; transition: border-color 0.15s; font-family: inherit;
+}
+select:focus, input:focus, textarea:focus { border-color: #c9a84c; }
+select {
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 7px center; padding-right: 22px; cursor: pointer;
+}
+select:disabled { opacity: 0.35; cursor: default; }
+.auto-fill { background: #faf9f6; border-color: #eae7df; color: #555; font-family: 'Courier New', monospace; font-size: 11px; cursor: default; }
+.auto-fill[readonly] { cursor: default; }
+input[type="number"] { text-align: center; }
+textarea { resize: none; height: 30px; line-height: 1.4; font-size: 11.5px; color: #888; padding-top: 6px; }
+
+.line-total { font-weight: 700; font-size: 13px; white-space: nowrap; text-align: right; display: block; }
+
+.btn-del { width: 24px; height: 24px; border: none; background: transparent; border-radius: 5px; cursor: pointer; color: #ccc; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.btn-del:hover { background: #fff0f0; color: #d44; }
+
+.manual-tag { display: inline-block; font-size: 8.5px; font-weight: 700; background: #f5f0e0; color: #b08a30; border-radius: 3px; padding: 1px 5px; letter-spacing: 0.5px; text-transform: uppercase; vertical-align: middle; margin-left: 4px; }
+
+.source-cell { font-size: 10px; color: #aaa; font-family: 'Courier New', monospace; line-height: 1.4; white-space: normal; min-width: 180px; max-width: 220px; }
+.source-cell.manual-src { color: #c9a84c; font-style: italic; }
+
+/* col widths */
+.col-n   { width: 38px; }
+.col-vr  { width: 130px; }
+.col-sr  { width: 130px; }
+.col-pr  { min-width: 200px; }
+.col-bar { width: 110px; }
+.col-kod { width: 110px; }
+.col-cen { width: 95px; }
+.col-ks  { width: 65px; }
+.col-cel { width: 100px; }
+.col-kom { min-width: 140px; }
+.col-src { width: 190px; }
+.col-del { width: 34px; }
+
+/* search dropdown */
+.search-wrap { position: relative; }
+.search-input { width: 100%; border: 1.5px solid #e4e0d8; border-radius: 6px; padding: 5px 8px; font-size: 12px; color: #1a1a14; background: white; outline: none; transition: border-color 0.15s; }
+.search-input:focus { border-color: #c9a84c; }
+.search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1.5px solid #c9a84c; border-radius: 6px; max-height: 220px; overflow-y: auto; z-index: 200; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+.search-item { padding: 7px 10px; font-size: 11.5px; cursor: pointer; border-bottom: 1px solid #f5f3ee; line-height: 1.4; }
+.search-item:hover { background: #faf8f2; }
+.search-item:last-child { border-bottom: none; }
+.search-item .si-code { font-family: 'Courier New', monospace; color: #888; font-size: 10.5px; }
+.search-item .si-desc { color: #333; font-weight: 500; }
+.search-item .si-price { float: right; color: #c9a84c; font-weight: 700; }
+.search-item .si-color { color: #888; font-size: 10.5px; }
+.search-none { padding: 10px; font-size: 12px; color: #999; text-align: center; }
+
+/* ── ADD ROW ─────────────────────────────────── */
+.add-row { padding: 12px 22px; border-top: 1px solid #f5f3ee; display: flex; gap: 8px; }
+.btn-add-row { background: transparent; border: 1.5px dashed #d0ccc2; color: #aaa; padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+.btn-add-row:hover { border-color: #c9a84c; color: #c9a84c; background: rgba(201,168,76,0.04); }
+
+/* ── FOOTER ──────────────────────────────────── */
+.card-footer { padding: 16px 22px; border-top: 2px solid #f0ede6; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.dph-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #888; }
+.dph-row input[type="number"] { width: 58px; text-align: center; }
+.totals { margin-left: auto; display: flex; align-items: center; gap: 28px; }
+.total-block { text-align: right; }
+.total-block .lbl { font-size: 10.5px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.total-block .val { font-size: 16px; font-weight: 800; color: #1a1a14; }
+.total-block .val.gold { color: #c9a84c; font-size: 18px; }
+.divider-v { width: 1px; height: 30px; background: #e8e6e0; }
+
+/* ── LOADING ─────────────────────────────────── */
+#loading { position: fixed; inset: 0; background: #1a1a14; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+#loading .logo { font-size: 36px; font-weight: 800; color: #c9a84c; letter-spacing: 3px; font-family: Georgia, serif; margin-bottom: 16px; }
+#loading .msg { color: #6a6a58; font-size: 13px; }
+.progress-bar { width: 200px; height: 3px; background: #333; border-radius: 2px; margin-top: 16px; }
+.progress-fill { height: 100%; background: #c9a84c; border-radius: 2px; animation: prog 1.5s ease-in-out; }
+@keyframes prog { from { width: 0 } to { width: 100% } }
+
+/* ── TOAST ───────────────────────────────────── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: #1a1a14; color: #c9a84c; border: 1px solid #c9a84c; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+/* col highlight */
+.col-warn { border: 1.5px solid #f0c070 !important; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="logo">HMG</div>
+  <div class="msg">Načítám ceníky…</div>
+  <div class="progress-bar"><div class="progress-fill"></div></div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="hmg">HMG</div>
+    <div class="sub">Harmonogram Manager</div>
+  </div>
+  <div style="padding: 16px 0;">
+    <div class="nav-section-label">Nástroje</div>
+    <div class="nav-item active">◈ Cenová kalkulace</div>
+    <div class="nav-item">↗ Export</div>
+    <div class="nav-section-label" style="margin-top: 20px;">Výrobci</div>
+    <div id="vendor-nav"></div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <div class="topbar">
+    <h1>Cenová kalkulace</h1>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm" onclick="exportXLSX()">⬇ XLSX</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportPDF()">🖨 PDF</button>
+    <button class="btn btn-gold btn-sm" onclick="addCatalogRow()">＋ Z ceníku</button>
+    <button class="btn btn-ghost btn-sm" onclick="addManualRow()">✎ Ruční</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">Položky</div>
+  </div>
+
+  <main>
+    <!-- SUMMARY STRIP -->
+    <div class="summary-strip" id="summary-strip">
+      <div class="stat-pill"><div class="stat-dot dot-green"></div> <span id="cnt-catalog">0</span> z ceníku</div>
+      <div class="stat-pill"><div class="stat-dot dot-gold"></div> <span id="cnt-manual">0</span> ruční</div>
+      <div class="spacer"></div>
+      <span class="strip-label">Mezisoučet bez DPH</span>
+      <span class="strip-total" id="strip-total">0 Kč</span>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Položky</h2>
+        <span class="badge" id="item-count">0 položek</span>
+        <div style="flex:1;"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="price-table">
+          <thead>
+            <tr>
+              <th class="col-n">#</th>
+              <th class="col-vr">Výrobce</th>
+              <th class="col-sr">Série / Kategorie</th>
+              <th class="col-pr">Výrobek</th>
+              <th class="col-bar">Barva / Povrch</th>
+              <th class="col-kod">Kód</th>
+              <th class="col-cen">Cena / ks</th>
+              <th class="col-ks">Ks</th>
+              <th class="col-cel">Celkem</th>
+              <th class="col-kom">Komentář</th>
+              <th class="col-src">Zdroj</th>
+              <th class="col-del"></th>
+            </tr>
+          </thead>
+          <tbody id="rows-body"></tbody>
+        </table>
+      </div>
+
+      <div class="add-row">
+        <button class="btn-add-row" onclick="addCatalogRow()">＋ Přidat z ceníku</button>
+        <button class="btn-add-row" onclick="addManualRow()">✎ Přidat ručně</button>
+      </div>
+
+      <div class="card-footer">
+        <div class="dph-row">
+          DPH <input type="number" id="dph-rate" value="21" min="0" max="100" onchange="recalcAll()"> %
+        </div>
+        <div class="totals">
+          <div class="total-block">
+            <div class="lbl">Bez DPH</div>
+            <div class="val" id="total-nodph">0 Kč</div>
+          </div>
+          <div class="divider-v"></div>
+          <div class="total-block">
+            <div class="lbl">DPH (<span id="dph-label">21</span> %)</div>
+            <div class="val" id="total-dph">0 Kč</div>
+          </div>
+          <div class="divider-v"></div>
+          <div class="total-block">
+            <div class="lbl">Celkem s DPH</div>
+            <div class="val gold" id="total-cdph">0 Kč</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── GLOBALS ──────────────────────────────────────────────────────────
+let rowCounter = 0;
+let rows = [];  // array of row objects
+
+// ── INIT ─────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    document.getElementById('loading').style.display = 'none';
+    buildVendorNav();
+    addCatalogRow(); // start with one empty row
+  }, 800);
+});
+
+function buildVendorNav() {
+  const nav = document.getElementById('vendor-nav');
+  const vendors = Object.keys(PRICELIST);
+  vendors.forEach(v => {
+    const cnt = Object.values(PRICELIST[v]).reduce((a, b) => a + b.length, 0);
+    const d = document.createElement('div');
+    d.className = 'nav-item';
+    d.style.fontSize = '12px';
+    d.innerHTML = `<span style="color:#4a4a38">▸</span> ${v} <span style="margin-left:auto;font-size:10px;color:#4a4a38">${cnt.toLocaleString('cs')}</span>`;
+    nav.appendChild(d);
+  });
+}
+
+// ── ADD ROW (catalog) ─────────────────────────────────────────────────
+function addCatalogRow() {
+  const id = ++rowCounter;
+  const row = { id, type: 'catalog', vendorLock: null };
+  rows.push(row);
+  renderRow(row);
+  updateSummary();
+}
+
+function addManualRow() {
+  const id = ++rowCounter;
+  const row = { id, type: 'manual' };
+  rows.push(row);
+  renderManualRow(row);
+  updateSummary();
+}
+
+// ── RENDER CATALOG ROW ────────────────────────────────────────────────
+function renderRow(row) {
+  const tbody = document.getElementById('rows-body');
+  const tr = document.createElement('tr');
+  tr.id = `row-${row.id}`;
+  tr.className = 'empty-row';
+  tr.dataset.type = 'catalog';
+
+  const vendors = Object.keys(PRICELIST);
+  const vendorOpts = vendors.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+
+  tr.innerHTML = `
+    <td class="col-n"><div class="row-num" id="rn-${row.id}">${getRowIndex(row.id)}</div></td>
+    <td class="col-vr">
+      <select id="sel-vendor-${row.id}" onchange="onVendorChange(${row.id})">
+        <option value="">— výrobce —</option>
+        ${vendorOpts}
+      </select>
+    </td>
+    <td class="col-sr">
+      <select id="sel-series-${row.id}" onchange="onSeriesChange(${row.id})" disabled>
+        <option value="">— série —</option>
+      </select>
+    </td>
+    <td class="col-pr">
+      <div class="search-wrap">
+        <input type="text" class="search-input" id="search-${row.id}" placeholder="— výrobek —" autocomplete="off"
+          oninput="onProductSearch(${row.id})" onfocus="onProductSearch(${row.id})" onblur="hideDropdown(${row.id})" disabled>
+        <div class="search-dropdown" id="drop-${row.id}" style="display:none;"></div>
+      </div>
+    </td>
+    <td class="col-bar"><input type="text" id="color-${row.id}" placeholder="—" value="" oninput="onManualPriceChange(${row.id})"></td>
+    <td class="col-kod"><input class="auto-fill" type="text" id="code-${row.id}" placeholder="—" readonly></td>
+    <td class="col-cen"><input class="auto-fill" type="text" id="price-${row.id}" placeholder="—" readonly></td>
+    <td class="col-ks"><input type="number" id="qty-${row.id}" value="1" min="1" onchange="onQtyChange(${row.id})"></td>
+    <td class="col-cel"><span class="line-total" id="total-${row.id}">—</span></td>
+    <td class="col-kom"><textarea id="note-${row.id}" placeholder="Poznámka…"></textarea></td>
+    <td class="col-src source-cell" id="src-${row.id}">—</td>
+    <td><button class="btn-del" onclick="deleteRow(${row.id})" title="Smazat">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// ── RENDER MANUAL ROW ─────────────────────────────────────────────────
+function renderManualRow(row) {
+  const tbody = document.getElementById('rows-body');
+  const tr = document.createElement('tr');
+  tr.id = `row-${row.id}`;
+  tr.className = 'manual-row';
+  tr.dataset.type = 'manual';
+
+  tr.innerHTML = `
+    <td class="col-n"><div class="row-num manual-n" id="rn-${row.id}">${getRowIndex(row.id)}</div></td>
+    <td class="col-vr"><input type="text" id="mvendor-${row.id}" placeholder="Výrobce / popis…" style="font-style:italic;"></td>
+    <td class="col-sr"><input type="text" id="mseries-${row.id}" placeholder="Kategorie…" style="font-style:italic;"></td>
+    <td class="col-pr">
+      <input type="text" id="mdesc-${row.id}" placeholder="Název výrobku…" style="font-style:italic;">
+      <span class="manual-tag">Ruční</span>
+    </td>
+    <td class="col-bar"><input type="text" id="color-${row.id}" placeholder="—"></td>
+    <td class="col-kod"><input type="text" id="code-${row.id}" placeholder="Kód"></td>
+    <td class="col-cen"><input type="number" id="mprice-${row.id}" placeholder="0" min="0" step="0.01" onchange="onMPriceChange(${row.id})"></td>
+    <td class="col-ks"><input type="number" id="qty-${row.id}" value="1" min="1" onchange="onQtyChange(${row.id})"></td>
+    <td class="col-cel"><span class="line-total" id="total-${row.id}">—</span></td>
+    <td class="col-kom"><textarea id="note-${row.id}" placeholder="Poznámka…"></textarea></td>
+    <td class="col-src source-cell manual-src" id="src-${row.id}">Ruční zápis</td>
+    <td><button class="btn-del" onclick="deleteRow(${row.id})" title="Smazat">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// ── EVENTS (catalog) ──────────────────────────────────────────────────
+function onVendorChange(id) {
+  const vendor = document.getElementById(`sel-vendor-${id}`).value;
+  const serSel = document.getElementById(`sel-series-${id}`);
+  const srch = document.getElementById(`search-${id}`);
+
+  serSel.innerHTML = '<option value="">— série —</option>';
+  serSel.disabled = !vendor;
+  srch.disabled = true;
+  srch.value = '';
+  clearProductFill(id);
+
+  if (!vendor) return;
+
+  const series = Object.keys(PRICELIST[vendor]).sort();
+  series.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    serSel.appendChild(o);
+  });
+
+  // If only one series, auto-select
+  if (series.length === 1) {
+    serSel.value = series[0];
+    onSeriesChange(id);
+  }
+}
+
+function onSeriesChange(id) {
+  const vendor = document.getElementById(`sel-vendor-${id}`).value;
+  const series = document.getElementById(`sel-series-${id}`).value;
+  const srch = document.getElementById(`search-${id}`);
+
+  srch.value = '';
+  srch.disabled = !series;
+  clearProductFill(id);
+  if (series) {
+    srch.dataset.vendor = vendor;
+    srch.dataset.series = series;
+    srch.placeholder = `Hledat v ${series}…`;
+  }
+}
+
+let searchTimers = {};
+function onProductSearch(id) {
+  const srch = document.getElementById(`search-${id}`);
+  const drop = document.getElementById(`drop-${id}`);
+  if (srch.disabled) return;
+
+  clearTimeout(searchTimers[id]);
+  searchTimers[id] = setTimeout(() => {
+    const vendor = srch.dataset.vendor;
+    const series = srch.dataset.series;
+    const q = srch.value.toLowerCase().trim();
+
+    if (!vendor || !series) return;
+    const items = PRICELIST[vendor][series] || [];
+    const filtered = q
+      ? items.filter(it => it[0].toLowerCase().includes(q) || it[1].toLowerCase().includes(q) || (it[2] && it[2].toLowerCase().includes(q)))
+      : items;
+    const top = filtered.slice(0, 80);
+
+    drop.innerHTML = '';
+    if (top.length === 0) {
+      drop.innerHTML = '<div class="search-none">Nic nenalezeno</div>';
+    } else {
+      top.forEach(it => {
+        const div = document.createElement('div');
+        div.className = 'search-item';
+        div.innerHTML = `<span class="si-price">${fmtPrice(it[3])}</span><div class="si-code">${esc(it[0])}${it[2] ? ' · <span class="si-color">' + esc(it[2]) + '</span>' : ''}</div><div class="si-desc">${esc(it[1])}</div>`;
+        div.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          selectProduct(id, it);
+        });
+        drop.appendChild(div);
+      });
+    }
+    drop.style.display = 'block';
+  }, 200);
+}
+
+function hideDropdown(id) {
+  setTimeout(() => {
+    const drop = document.getElementById(`drop-${id}`);
+    if (drop) drop.style.display = 'none';
+  }, 220);
+}
+
+function selectProduct(id, it) {
+  // it = [code, desc, color, price, source]
+  const srch = document.getElementById(`search-${id}`);
+  srch.value = it[1];
+
+  document.getElementById(`code-${id}`).value = it[0];
+  document.getElementById(`price-${id}`).value = fmtPrice(it[3]);
+  document.getElementById(`color-${id}`).value = it[2] || '';
+  document.getElementById(`src-${id}`).textContent = it[4];
+
+  const rowObj = rows.find(r => r.id === id);
+  if (rowObj) { rowObj.price = parseFloat(it[3]) || 0; rowObj.source = it[4]; }
+
+  const tr = document.getElementById(`row-${id}`);
+  tr.classList.remove('empty-row');
+
+  hideDropdown(id);
+  onQtyChange(id);
+}
+
+function clearProductFill(id) {
+  ['code','price','color'].forEach(f => {
+    const el = document.getElementById(`${f}-${id}`);
+    if (el) el.value = '';
+  });
+  const src = document.getElementById(`src-${id}`);
+  if (src) src.textContent = '—';
+  const tot = document.getElementById(`total-${id}`);
+  if (tot) tot.textContent = '—';
+  const rowObj = rows.find(r => r.id === id);
+  if (rowObj) { rowObj.price = 0; }
+  recalcAll();
+}
+
+function onManualPriceChange(id) { recalcAll(); }
+
+function onMPriceChange(id) {
+  const rowObj = rows.find(r => r.id === id);
+  const priceEl = document.getElementById(`mprice-${id}`);
+  if (rowObj && priceEl) rowObj.price = parseFloat(priceEl.value) || 0;
+  onQtyChange(id);
+}
+
+function onQtyChange(id) {
+  const rowObj = rows.find(r => r.id === id);
+  const qtyEl = document.getElementById(`qty-${id}`);
+  const totEl = document.getElementById(`total-${id}`);
+  if (!rowObj || !qtyEl || !totEl) return;
+
+  let price = rowObj.price || 0;
+  if (rowObj.type === 'catalog') {
+    const priceStr = document.getElementById(`price-${id}`)?.value || '';
+    price = parsePrice(priceStr);
+    rowObj.price = price;
+  }
+  const qty = parseInt(qtyEl.value) || 1;
+  const total = price * qty;
+  totEl.textContent = price > 0 ? fmtPrice(total) : '—';
+  recalcAll();
+}
+
+function deleteRow(id) {
+  const tr = document.getElementById(`row-${id}`);
+  if (tr) tr.remove();
+  rows = rows.filter(r => r.id !== id);
+  updateRowNumbers();
+  recalcAll();
+  updateSummary();
+}
+
+// ── RECALC ────────────────────────────────────────────────────────────
+function recalcAll() {
+  let subtotal = 0;
+  rows.forEach(row => {
+    const qtyEl = document.getElementById(`qty-${row.id}`);
+    if (!qtyEl) return;
+    const qty = parseInt(qtyEl.value) || 1;
+
+    let price = 0;
+    if (row.type === 'catalog') {
+      const priceStr = document.getElementById(`price-${row.id}`)?.value || '';
+      price = parsePrice(priceStr);
+    } else {
+      const mpEl = document.getElementById(`mprice-${row.id}`);
+      price = parseFloat(mpEl?.value) || 0;
+    }
+    row.price = price;
+    subtotal += price * qty;
+
+    const totEl = document.getElementById(`total-${row.id}`);
+    if (totEl) totEl.textContent = price > 0 ? fmtPrice(price * qty) : '—';
+  });
+
+  const dph = parseFloat(document.getElementById('dph-rate').value) || 0;
+  const dphAmt = subtotal * dph / 100;
+  document.getElementById('total-nodph').textContent = fmtPrice(subtotal);
+  document.getElementById('total-dph').textContent = fmtPrice(dphAmt);
+  document.getElementById('total-cdph').textContent = fmtPrice(subtotal + dphAmt);
+  document.getElementById('dph-label').textContent = dph;
+  document.getElementById('strip-total').textContent = fmtPrice(subtotal);
+  updateSummary();
+}
+
+function updateSummary() {
+  const allTr = document.querySelectorAll('#rows-body tr');
+  const catalogCount = document.querySelectorAll('#rows-body tr[data-type="catalog"]').length;
+  const manualCount = document.querySelectorAll('#rows-body tr[data-type="manual"]').length;
+  document.getElementById('cnt-catalog').textContent = catalogCount;
+  document.getElementById('cnt-manual').textContent = manualCount;
+  document.getElementById('item-count').textContent = `${allTr.length} ${allTr.length === 1 ? 'položka' : allTr.length < 5 ? 'položky' : 'položek'}`;
+}
+
+function updateRowNumbers() {
+  const trs = document.querySelectorAll('#rows-body tr');
+  trs.forEach((tr, i) => {
+    const id = tr.id.replace('row-','');
+    const rn = document.getElementById(`rn-${id}`);
+    if (rn) rn.textContent = i + 1;
+  });
+}
+
+function getRowIndex(id) {
+  return rows.length;
+}
+
+// ── EXPORT XLSX ───────────────────────────────────────────────────────
+function exportXLSX() {
+  // Build CSV and trigger download (real XLSX would need a library)
+  const headers = ['#','Výrobce','Série','Výrobek','Barva','Kód','Cena/ks (Kč)','Počet','Celkem (Kč)','Komentář','Zdroj'];
+  const trs = document.querySelectorAll('#rows-body tr');
+  const csvRows = [headers.join('\t')];
+
+  trs.forEach((tr, i) => {
+    const id = tr.id.replace('row-','');
+    const type = tr.dataset.type;
+    let vendor='', series='', desc='', color='', code='', price='', qty='', total='', note='', src='';
+
+    qty   = document.getElementById(`qty-${id}`)?.value || '1';
+    note  = document.getElementById(`note-${id}`)?.value || '';
+    src   = document.getElementById(`src-${id}`)?.textContent || '';
+    color = document.getElementById(`color-${id}`)?.value || '';
+    code  = document.getElementById(`code-${id}`)?.value || '';
+    total = document.getElementById(`total-${id}`)?.textContent || '';
+
+    if (type === 'catalog') {
+      vendor = document.getElementById(`sel-vendor-${id}`)?.value || '';
+      series = document.getElementById(`sel-series-${id}`)?.value || '';
+      desc   = document.getElementById(`search-${id}`)?.value || '';
+      price  = document.getElementById(`price-${id}`)?.value || '';
+    } else {
+      vendor = document.getElementById(`mvendor-${id}`)?.value || '';
+      series = document.getElementById(`mseries-${id}`)?.value || '';
+      desc   = document.getElementById(`mdesc-${id}`)?.value || '';
+      price  = document.getElementById(`mprice-${id}`)?.value || '';
+    }
+    csvRows.push([i+1,vendor,series,desc,color,code,price,qty,total,note,src].map(v=>`"${String(v).replace(/"/g,'""')}"`).join('\t'));
+  });
+
+  const dph = document.getElementById('dph-rate').value;
+  csvRows.push('');
+  csvRows.push(`\t\t\t\t\t\tBez DPH:\t\t${document.getElementById('total-nodph').textContent}`);
+  csvRows.push(`\t\t\t\t\t\tDPH (${dph} %):\t\t${document.getElementById('total-dph').textContent}`);
+  csvRows.push(`\t\t\t\t\t\tCelkem s DPH:\t\t${document.getElementById('total-cdph').textContent}`);
+
+  const blob = new Blob(['\uFEFF'+csvRows.join('\n')], {type:'text/tab-separated-values;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `hmg-cenik-${new Date().toISOString().slice(0,10)}.xls`;
+  a.click();
+  showToast('✓ Exportováno jako XLS');
+}
+
+// ── EXPORT PDF ────────────────────────────────────────────────────────
+function exportPDF() {
+  window.print();
+  showToast('✓ Tisk / PDF otevřen');
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+function fmtPrice(n) {
+  const num = parseFloat(n) || 0;
+  return num.toLocaleString('cs-CZ', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' Kč';
+}
+
+function parsePrice(str) {
+  return parseFloat(String(str).replace(/[^\d.,]/g,'').replace(',','.')) || 0;
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── PRINT STYLES ──────────────────────────────────────────────────────
+const printStyle = document.createElement('style');
+printStyle.media = 'print';
+printStyle.textContent = `
+  .sidebar, .topbar, .tabs, .add-row, .btn-del, #loading, .toast { display: none !important; }
+  .content { margin-left: 0 !important; }
+  body { background: white; }
+  .card { border: none; }
+  thead tr { background: #1a1a14 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  thead th { color: #c9a84c !important; }
+`;
+document.head.appendChild(printStyle);
+</script>
+</body>
+</html>
