@@ -266,6 +266,7 @@ textarea { resize: none; height: 30px; line-height: 1.4; font-size: 11.5px; colo
       <div class="card-footer">
         <div class="dph-row">
           DPH <input type="number" id="dph-rate" value="21" min="0" max="100" onchange="recalcAll()"> %
+          <span style="margin-left:16px;font-size:10.5px;color:#c9a84c;">⚠ Villeroy &amp; Boch – ceny v EUR</span>
         </div>
         <div class="totals">
           <div class="total-block">
@@ -498,8 +499,9 @@ function selectProduct(id, it) {
   const srch = document.getElementById(`search-${id}`);
   srch.value = it[1];
 
+  const _vendor = document.getElementById(`sel-vendor-${id}`)?.value || '';
   document.getElementById(`code-${id}`).value = it[0];
-  document.getElementById(`price-${id}`).value = fmtPrice(it[3]);
+  document.getElementById(`price-${id}`).value = fmtPrice(it[3], _vendor);
   document.getElementById(`color-${id}`).value = it[2] || '';
   document.getElementById(`src-${id}`).textContent = it[4];
 
@@ -672,9 +674,10 @@ function exportPDF() {
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────
-function fmtPrice(n) {
+function fmtPrice(n, vendor) {
   const num = parseFloat(n) || 0;
-  return num.toLocaleString('cs-CZ', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' Kč';
+  const currency = (vendor && typeof PRICE_CURRENCY !== 'undefined' && PRICE_CURRENCY[vendor] === 'EUR') ? ' €' : ' Kč';
+  return num.toLocaleString('cs-CZ', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + currency;
 }
 
 function parsePrice(str) {
